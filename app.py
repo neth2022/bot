@@ -69,18 +69,29 @@ def download_and_send(chat_id: int, m3u8_url: str, msg_id: int):
             timeout=MAX_SECONDS + 60
         )
 
-        if r.returncode != 0 or not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
-            err = r.stderr.decode("utf-8", "ignore") if isinstance(r.stderr, (bytes, bytearray)) else str(r.stderr)
-            tail = "\n".join(err.splitlines()[-10:])
-            bot.send_message(chat_id, "❌ Failed.\nPossible: DRM/protected, needs headers/cookies, or invalid link.\n\nLast error:\n" + tail)
-            return
+        if r.returncode != 0 or not os.path.exists(out_path):
+    bot.send_message(chat_id, "❌ Download failed (DRM / invalid stream).")
+    return
 
-        size_mb = os.path.getsize(out_path) / (1024 * 1024)
-        bot.send_message(chat_id, f"✅ Download finished ({size_mb:.1f} MB). Uploading…")
+# ---- SIZE CHECK (ADD HERE) ----
+size_mb = os.path.getsize(out_path) / (1024 * 1024)
+if size_mb > 200:
+    bot.send_message(
+        chat_id,
+        f"❌ File too large ({size_mb:.1f} MB).\n"
+        "Try a shorter link or lower quality."
+    )
+    return
+# -------------------------------
 
-        with open(out_path, "rb") as f:
-            bot.send_document(chat_id, document=f, filename="output.mp4", caption="✅ Done")
-
+with open(out_path, "rb") as f:
+    bot.send_document(
+        chat_id,
+        document=f,
+        filename="video.mp4",
+        caption=f"✅ Done ({size_mb:.1f} MB)",
+        timeout=600
+    )
     except subprocess.TimeoutExpired:
         bot.send_message(chat_id, "⏳ Timed out (stream too long / stuck). Try a shorter link.")
     except Exception as e:
