@@ -2,13 +2,15 @@ import os
 import subprocess
 from flask import Flask, request
 from telegram import Update, Bot
-from telegram.ext import Dispatcher, MessageHandler, filters
+from telegram.ext import Dispatcher, MessageHandler, Filters
+
 
 TOKEN = os.environ["BOT_TOKEN"]
 bot = Bot(token=TOKEN)
 
 app = Flask(__name__)
-dispatcher = Dispatcher(bot=bot, update_queue=None, workers=2, use_context=True)
+dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+
 
 def handle_message(update, context):
     text = (update.message.text or "").strip()
