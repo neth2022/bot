@@ -14,4 +14,4 @@ COPY app.py .
 ENV PORT=8000
 EXPOSE 8000
 
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "app:app"]
+CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:8000", "app:app"]
